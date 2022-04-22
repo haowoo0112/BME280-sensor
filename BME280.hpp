@@ -17,7 +17,12 @@ extern I2C_HandleTypeDef hi2c2;
 void BME280_read(struct bme280_dev*);
 void BME280_init(struct bme280_dev*);
 void BME280_setting(struct bme280_settings*);
-// read sensor data
+
+void BME280_set_osr_p(bme280_settings*, uint8_t);
+void BME280_set_osr_t(bme280_settings*, uint8_t);
+void BME280_set_osr_h(bme280_settings*, uint8_t);
+
+
 void BME280_read_sensor(struct bme280_sensor_data*);
 void BME280_read_calib_data(struct bme280_calib_data*);
 void BME280_print(struct bme280_sensor_data*);

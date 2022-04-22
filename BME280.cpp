@@ -3,6 +3,34 @@
 #include <string.h>
 #include "usbd_cdc_if.h"
 
+// set oversampling of pressure to BME280
+void BME280_set_osr_p(bme280_settings *BME280, uint8_t set_value){
+
+	BME280->osr_p = set_value;
+	uint8_t setting_value = BME280->mode|(BME280->osr_p<<2)|(BME280->osr_t<<5);
+	uint8_t setting_2[] = {0xF4, setting_value};
+	HAL_I2C_Master_Transmit(&hi2c2, BME280_ADDR, setting_2, 2, 1);
+}
+
+// set oversampling of temperature to BME280
+void BME280_set_osr_t(bme280_settings *BME280, uint8_t set_value){
+
+	BME280->osr_t = set_value;
+	uint8_t setting_value = BME280->mode|(BME280->osr_p<<2)|(BME280->osr_t<<5);
+	uint8_t setting_2[] = {0xF4, setting_value};
+	HAL_I2C_Master_Transmit(&hi2c2, BME280_ADDR, setting_2, 2, 1);
+}
+
+// set oversampling of humidity to BME280
+void BME280_set_osr_h(bme280_settings *BME280, uint8_t set_value){
+
+	BME280->osr_h = set_value;
+	uint8_t setting_value = BME280->mode|(BME280->osr_p<<2)|(BME280->osr_t<<5);
+	uint8_t setting_2[] = {0xF4, setting_value};
+	HAL_I2C_Master_Transmit(&hi2c2, BME280_ADDR, setting_2, 2, 1);
+}
+
+
 void BME280_setting(struct bme280_settings *BME280){
 
 	BME280->osr_p = 1;
@@ -15,6 +43,7 @@ void BME280_setting(struct bme280_settings *BME280){
 
 
 }
+
 
 void BME280_write_setting(bme280_settings *BME280){
 	/* register 0xF2
@@ -33,6 +62,7 @@ void BME280_write_setting(bme280_settings *BME280){
 	HAL_I2C_Master_Transmit(&hi2c2, BME280_ADDR, setting_2, 2, 1);
 }
 
+// init BME280
 void BME280_init(bme280_dev *BME280){
 
 	BME280_setting(&BME280->settings);
@@ -41,6 +71,7 @@ void BME280_init(bme280_dev *BME280){
 
 }
 
+//read non-compensate data
 void BME280_read_sensor(bme280_sensor_data *BME280){
 	uint8_t tmp[10];
 	HAL_StatusTypeDef ret;
@@ -58,6 +89,7 @@ void BME280_read_sensor(bme280_sensor_data *BME280){
 	check_HAL_status(ret, 0xFA);
 }
 
+//read calib data
 void BME280_read_calib_data(bme280_calib_data *BME280){
 	uint8_t tmp[10];
 	HAL_StatusTypeDef ret;
@@ -109,7 +141,7 @@ void BME280_read_calib_data(bme280_calib_data *BME280){
 
 }
 
-
+// read non-compensate data and calib data and calculate compensate data
 void BME280_read(bme280_dev *BME280){
 
 	BME280_read_sensor(&BME280->sensor_data);
@@ -127,6 +159,7 @@ void BME280_print(struct bme280_sensor_data *compensated_sensor_data){
 	CDC_Transmit_FS((uint8_t*)DEBUG_cmd, strlen(DEBUG_cmd));
 }
 
+//calculate compensate temperature
 void BME280_compensate_T(bme280_sensor_data *sensor_data, bme280_calib_data *calib_data, bme280_sensor_data *compensated_sensor_data){
 	double var1, var2;
 
@@ -139,6 +172,8 @@ void BME280_compensate_T(bme280_sensor_data *sensor_data, bme280_calib_data *cal
 	sprintf(DEBUG_cmd, "var1: %.2f var2: %.2f temperature: %.2f\r\n", var1, var2, compensated_sensor_data->temperature);
 	CDC_Transmit_FS((uint8_t*)DEBUG_cmd, strlen(DEBUG_cmd));
 }
+
+//calculate compensate pressure
 void BME280_compensate_P(bme280_sensor_data *sensor_data, bme280_calib_data *calib_data, bme280_sensor_data *compensated_sensor_data){
 	double var1, var2;
 	double p;
@@ -161,6 +196,7 @@ void BME280_compensate_P(bme280_sensor_data *sensor_data, bme280_calib_data *cal
 
 }
 
+//calculate compensate humidity
 void BME280_compensate_H(bme280_sensor_data *sensor_data, bme280_calib_data *calib_data, bme280_sensor_data *compensated_sensor_data){
 	double var_H;
 
